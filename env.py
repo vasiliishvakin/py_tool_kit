@@ -43,6 +43,11 @@ class EnvValue:
 
 
 class EnvSecretValue(EnvValue):
+    def __init__(self, value: str | EnvValue | None = None, name: str | None = None):
+        if isinstance(value, EnvValue):
+            value = str(value)
+        super().__init__(value, name)
+
     @property
     def secret(self):
         return self._value if self._value is not None else ""
@@ -66,45 +71,51 @@ class EnvSecretValue(EnvValue):
         return self.value if self._value is not None else None
 
 
-def load_env(with_parent: bool = True):
-    current_file_dir = os.path.dirname(os.path.abspath(__file__))
-    env_path = os.path.abspath(os.path.join(current_file_dir, ".env"))
+class EnvHelper:
+    def __init__(self, with_parent: bool = True) -> None:
+        self._environment = self._load_env(with_parent)
+        self._values = {}
+        self._secrets = {}
 
-    parent_values = {}
-    if with_parent:
-        parent_env_path = os.path.abspath(os.path.join(current_file_dir, "../.env"))
-        parent_values = dotenv_values(parent_env_path)
+    @property
+    def values(self):
+        return self._values
 
-    environment = {
-        **parent_values,
-        **dotenv_values(env_path),
-        **os.environ,
-    }
+    def _load_env(self, with_parent: bool = True):
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.abspath(os.path.join(current_file_dir, ".env"))
 
-    return environment
+        parent_values = {}
+        if with_parent:
+            parent_env_path = os.path.abspath(os.path.join(current_file_dir, "../.env"))
+            parent_values = dotenv_values(parent_env_path)
 
+        environment = {
+            **parent_values,
+            **dotenv_values(env_path),
+            **os.environ,
+        }
 
-def _env_raw(key: str, default: str | None = None) -> str | None:
-    if not hasattr(_env_raw, "environment"):
-        _env_raw.environment = load_env()
-    if key not in _env_raw.environment:
-        return default
-    return _env_raw.environment[key]
+        return environment
 
+    def get_raw(self, key: str, default: str | None = None) -> str | None:
+        if key not in self._environment:
+            return default
+        return self._environment[key]
 
-def env(key: str, default: str | None = None) -> EnvValue:
-    if not hasattr(env, "values"):
-        env.values = {}
-    if key not in env.values:
-        value = _env_raw(key, default)
-        env.values[key] = EnvValue(value, key)
-    return env.values[key]
+    def get(self, key: str, default: str | None = None) -> EnvValue:
+        if key not in self.values:
+            value = self.get_raw(key, default)
+            self.values[key] = EnvValue(value, key)
+        return self.values[key]
 
+    def get_secret(self, key: str, default: str | None = None) -> EnvSecretValue:
+        if key not in self._secrets:
+            value = self.get(key, default)
+            self._secrets[key] = EnvSecretValue(value, key)
+        return self._secrets[key]
 
-def env_secret(key: str, default: str | None = None) -> EnvSecretValue:
-    if not hasattr(env_secret, "values"):
-        env_secret.values = {}
-    if key not in env_secret.values:
-        value = _env_raw(key, default)
-        env_secret.values[key] = EnvSecretValue(value, key)
-    return env_secret.values[key]
+    def __call__(self, key: str, default: str | None = None, is_secret=False) -> EnvValue | EnvSecretValue:
+        if is_secret:
+            return self.get_secret(key, default)
+        return self.get(key, default)
