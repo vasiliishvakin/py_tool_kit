@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 
 class Logger:
     def __init__(self, config:dict) -> None:
@@ -17,7 +16,15 @@ class Logger:
             self._loggers[name] = logging.getLogger(name)
 
         return self._loggers[name]
-    
+
     def __call__(self, name: str) -> logging.Logger:
         return self.get(name)
-    
+
+    def keys(self):
+        return self._loggers.keys()
+
+    def __iter__(self):
+        return iter(self._loggers)
+
+    def add_null_handler(self, name: str) -> None:
+        self.get(name).addHandler(logging.NullHandler())
