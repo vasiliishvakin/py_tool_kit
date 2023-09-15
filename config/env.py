@@ -23,6 +23,15 @@ class EnvValue:
     def __str__(self):
         return self.value
 
+    def __int__(self):
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
+    def __bool__(self):
+        return bool(self.value)
+
     def __repr__(self):
         return f'<EnvValue value="{self.value}">'
 
@@ -72,8 +81,9 @@ class EnvSecretValue(EnvValue):
 
 
 class EnvHelper:
-    def __init__(self, with_parent: bool = True) -> None:
-        self._environment = self._load_env(with_parent)
+    def __init__(self, app_dir: str, with_parent: bool = False) -> None:
+        self._app_dir = app_dir
+        self._environment = self._load_env(self._app_dir, with_parent)
         self._values = {}
         self._secrets = {}
 
@@ -81,13 +91,13 @@ class EnvHelper:
     def values(self):
         return self._values
 
-    def _load_env(self, with_parent: bool = True):
-        current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        env_path = os.path.abspath(os.path.join(current_file_dir, ".env"))
+    def _load_env(self, app_dir:str, with_parent: bool = True):
+        env_path = os.path.abspath(os.path.join(app_dir, ".env"))
 
         parent_values = {}
         if with_parent:
-            parent_env_path = os.path.abspath(os.path.join(current_file_dir, "../.env"))
+            parent_env_path = os.path.abspath(
+                os.path.join(app_dir, "../.env"))
             parent_values = dotenv_values(parent_env_path)
 
         environment = {

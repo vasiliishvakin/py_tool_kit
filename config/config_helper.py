@@ -1,5 +1,5 @@
 from typing import Any
-from env import EnvValue
+from .env import EnvValue
 
 
 class ConfigError(Exception):

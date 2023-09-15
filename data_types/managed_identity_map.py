@@ -1,6 +1,6 @@
 from typing import Any, Callable, Iterator, List, TypedDict, Unpack
 
-from smart_data_types import HitsMisses, IdentityMap, LRUList, TagsManager, TTLManager, GCType, GCOperator
+from .import HitsMisses, IdentityMap, LRUList, TagsManager, TTLManager, GCType, GCOperator
 
 
 class IdentityMapAddParams(TypedDict):
