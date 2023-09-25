@@ -1,7 +1,9 @@
 import logging
+import logging.config
+
 
 class Logger:
-    def __init__(self, config:dict) -> None:
+    def __init__(self, config: dict) -> None:
         self.configure(config)
         self._loggers = {}
 

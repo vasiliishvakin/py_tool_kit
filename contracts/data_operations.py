@@ -25,7 +25,7 @@ class CRUDL(CRUD):
     def all(self):
         pass
 
-    def filter(self):
+    def filter(self, *criterion):
         pass
 
     def count(self):
